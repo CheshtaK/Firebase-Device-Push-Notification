@@ -17,22 +17,43 @@ exports.sendNotification = functions.database.ref('/notifications/{user_id}/{not
   return console.log('A Notification has been deleted from the database : ', notification_id);
 
 }
-   const deviceToken = admin.database().ref(`/Users/${user_id}/device_token`).once('value');
 
-   return deviceToken.then(result => {
+const fromUser = admin.database().ref(`/notifications/${user_id}/${notification_id}`).once('value');
 
-     const payload = {
-       notification: {
-         title : "New Friend Request",
-         body: `Friend has sent you request`,
-         icon: "default",
-       };
+  return fromUser.then(fromUserResult => {
 
-     return admin.messaging().sendToDevice(token_id, payload).then(response => {
+    const from_user_id = fromUserResult.val().from;
 
-       console.log('This was the notification Feature');
+    console.log('You have new notification from  : ', from_user_id);
 
-   });
+    const userQuery = admin.database().ref(`Users/${from_user_id}/name`).once('value');
+    const deviceToken = admin.database().ref(`/Users/${user_id}/device_token`).once('value');
 
- });
+    return Promise.all([userQuery, deviceToken]).then(result => {
+
+      const userName = result[0].val();
+      const token_id = result[1].val();
+
+      const payload = {
+        notification: {
+          title : "New Friend Request",
+          body: `${userName} has sent you request`,
+          icon: "default",
+          click_action : "com.example.cheshta.chatapplication_TARGET_NOTIFICATION"
+        },
+        data : {
+          from_user_id : from_user_id
+        }
+      };
+
+      return admin.messaging().sendToDevice(token_id, payload).then(response => {
+
+        console.log('This was the notification Feature');
+
+      });
+
+    });
+
+  });
+
 });
