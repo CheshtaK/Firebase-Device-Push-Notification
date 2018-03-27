@@ -26,7 +26,7 @@ exports.sendNotification = functions.database.ref('/notifications/{id}/{notifica
     const userQuery = admin.database().ref(`Users/${from_user_id}/name`).once('value');
     const deviceToken = admin.database().ref(`/Users/${user_id}/device_token`).once('value');
 
-    return Promise.all([userQuery, deviceToken]).then(result => {s
+    return Promise.all([userQuery, deviceToken]).then(result => {
 
       const userName = result[0].val();
       const token_id = result[1].val();
